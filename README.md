@@ -1,6 +1,6 @@
 # UniAMP
-The code and data in the paper **UniAMP: Enhancing AMP Prediction using Deep Neural Networks with Inferred Information of Peptides**\
-The web prediction service for UniAMP can be accessed at [https://amp.starhelix.cn](https://amp.starhelix.cn)
+The code, data and models in the paper **UniAMP: Enhancing AMP Prediction using Deep Neural Networks with Inferred Information of Peptides**\
+UniAMP can be accessed online via [https://amp.starhelix.cn](https://amp.starhelix.cn)
 
 ## Requirements
 To set up the necessary environment for UniAMP, follow these steps:
