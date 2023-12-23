@@ -1,5 +1,6 @@
 # UniAMP
-The code and data in the paper **UniAMP: Enhancing AMP Prediction using Deep Neural Networks with Inferred Information of Peptides**
+The code and data in the paper **UniAMP: Enhancing AMP Prediction using Deep Neural Networks with Inferred Information of Peptides**\
+The web prediction service for UniAMP can be accessed at [https://amp.starhelix.cn](https://amp.starhelix.cn)
 
 ## Requirements
 To set up the necessary environment for UniAMP, follow these steps:
@@ -28,14 +29,14 @@ pip install h5py==2.9.0
 Ensure to adjust the version numbers and dependencies according to your specific requirements. This setup assumes the use of a Conda environment named 'UniAMP'.
 
 ## Usage
-###Feature extraction
+### Feature extraction
 In this project, we leverage the power of [UniRep](https://github.com/churchlab/UniRep), a tool developed by the [Church Lab](https://churchlab.github.io/), for feature extraction. UniRep is a versatile toolkit for extracting fixed-size feature vectors from biological sequences, such as proteins or RNA.\
 **The UniRep repository**, available at [https://github.com/churchlab/UniRep](https://github.com/churchlab/UniRep), contains the source code, documentation, and examples for using UniRep in your projects.\
 Due to the installation of the `tape_proteins` toolkit, you can conveniently utilize UniRep as follows:
 ~~~
 tape-embed unirep input.fasta output.npz babbler-1900 --tokenizer unirep
 ~~~
-###train
+### train
 ~~~
 python train.py -model UniAMP -dataset_path ./data/aeruginosa/training_dataset.npz
 ~~~
@@ -55,16 +56,19 @@ _If you need to train other models, your `dataset_path` should be `*.csv`, and `
   - Default Value: _0.2_
 - Use `-patience xxx` to set the patience for training.
   - Default Value: _30_
-###test
+### test
 ~~~
 python test.py -model UniAMP -model_path ./models/model_UniAMP_uni.h5 -dataset_path ./data_aeruginosa/benchmark_dataset.npz
 ~~~
 _If you need to test other models, your `dataset_path` should be `*.csv`._
-###infer
+### infer
 ~~~
 python infer.py -model UniAMP -model_path ./models/model_UniAMP_uni.h5 -dataset_path ./data_aeruginosa/benchmark_dataset.fasta
 ~~~
 - Use `-save_path` to specify the path where the inference results will be saved.
   - Default Value: _./data/results/results.csv_
-
-
+## Data Format
+- When inferring, there are no special requirements for the `.fasta` format.
+- When training and test:
+  - A DataFrame is recorded in `.csv` format, which is required to contain `sequence` and `class` columns. Where `sequence` should be composed of 20 standard amino acids, and `class` is the label of the sequence.
+  - When using UniRep to convert `.fasta` to `.npz` format, please ensure that the last character of your `sequence_name` is the label of the sequence. The program will read this character for evaluation.
