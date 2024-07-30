@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+import pandas as pd
 from torch.utils.data import DataLoader, random_split
 from torch.utils.data import RandomSampler
 from utils.data import TextFeaturesDataset
@@ -443,30 +444,33 @@ def feature_encode_comparison(sequences: List[str], features: List[str], lag: in
     for feature in features:
         if feature == 'pseaac':
             PseAAC = [list(get_PseAAC(seq, lambd)) for seq in sequences]
-            features.append(PseAAC)
+            features_vec.append(PseAAC)
         elif feature == 'ct':
             ct = conjoint_triad(sequences)
-            features.append(ct)
+            features_vec.append(ct)
         elif feature == 'ac':
             ac = ac_code(sequences)
-            features.append(ac)
+            features_vec.append(ac)
         elif feature == 'ad1':
             ad1 = [get_MBA(seq, lag) for seq in sequences]
-            features.append(ad1)
+            features_vec.append(ad1)
         elif feature == 'ad2':
             ad2 = [get_MA(seq, lag) for seq in sequences]
-            features.append(ad2)
+            features_vec.append(ad2)
         elif feature == 'ad3':
             ad3 = [get_GA(seq, lag) for seq in sequences]
-            features.append(ad3)
+            features_vec.append(ad3)
     # print(len(PseAAC[0]), len(ct[0]), len(PseAAC[0]), len(ad1[0]), len(ad2[0]), len(ad3[0]), len(ac[0]))
     # print('length check:', len(PseAAC) == len(ac) and len(PseAAC) == len(ct))
     # if len(PseAAC) == len(ct) and len(PseAAC) == len(ac):
-    for i in range(len(PseAAC)):
+    for i in range(len(features_vec[0])):
         sample_vec = []
         for feature in features_vec:
             sample_vec += feature[i]
         result.append(sample_vec)
+    # print(len(result))
+    # print(len(features_vec[0]))
+    # pd.DataFrame(result).to_csv(r'/nfs/my/Huang/czx/amp_screening/data/results/encode.csv')
             # result.append(aac[i] + ct[i] + ad1[i])
     return np.array(result)
 

@@ -16,6 +16,8 @@ except ImportError:
     from pytorch_pretrained_bert.modeling import BertPreTrainedModel
 
 from pytorch_pretrained_bert import BertModel
+import math
+
 
 dr = 0.12
 l2c = 0.001
@@ -168,7 +170,7 @@ def UniAMP(my_input_dim, args):
     model = Model(inputs=input, outputs=output)
 
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=args.lr), metrics=['accuracy', get_precision, get_recall, get_F_score, get_MCC])
-
+    # model.compile(loss='binary_crossentropy', optimizer=Adam(lr=args.lr), metrics=['accuracy', get_MCC, get_tp, get_fp, get_tn, get_fn])
     return model
 
 

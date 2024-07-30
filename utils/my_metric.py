@@ -45,14 +45,30 @@ def get_MCC(y_true, y_pred):
     tn = K.sum(K.round(K.clip((1 - y_true) * (1 - y_pred), 0, 1)))
     # y_true=1, y_pred=0
     fn = K.sum(K.round(K.clip(y_true * (1 - y_pred), 0, 1)))
+    # print(tp, tn, fp, fn)
     return (tp * tn - fp * fn) / ((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) + K.epsilon()) ** 0.5
 
+def get_tp(y_true, y_pred):
+    tp = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    return tp
+
+def get_fp(y_true, y_pred):
+    fp = K.sum(K.round(K.clip((1 - y_true) * y_pred, 0, 1)))
+    return fp
+
+def get_tn(y_true, y_pred):
+    tn = K.sum(K.round(K.clip((1 - y_true) * (1 - y_pred), 0, 1)))
+    return tn
+
+def get_fn(y_true, y_pred):
+    fn = K.sum(K.round(K.clip(y_true * (1 - y_pred), 0, 1)))
+    return fn
 
 def get_metrics(true_positive: int, false_positive: int, true_negative: int, false_negative: int):
     accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
     precision = true_positive / (true_positive + false_positive)
     recall = true_positive / (true_positive + false_negative)
-    f_score = 1.25 * precision * recall / (0.25 * precision + recall)
+    f_score = 2 * precision * recall /  (precision + recall)
     MCC = (true_positive * true_negative - false_positive * false_negative) / (
             (true_positive + false_positive) * (true_positive + false_negative) * (
             true_negative + false_positive) * (true_negative + false_negative)) ** 0.5

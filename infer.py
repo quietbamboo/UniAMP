@@ -25,9 +25,9 @@ def infer(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-model', type=str, default='LSTM',
+    parser.add_argument('-model', type=str, default='UniAMP',
                         help='The name of the model to infer (LSTM/ATT/BERT/UniAMP).')
-    parser.add_argument('-model_path', type=str, default=r'./models/model_LSTM_aeruginosa.h5',
+    parser.add_argument('-model_path', type=str, default=r'./models/model_aeruginosa_UniAMP_uni_protT5.h5',
                         help='Path of the model file (*.h5/*.bin).')
     parser.add_argument('-dataset_path', type=str, default=r'./data/aeruginosa/benchmark_dataset.fasta',
                         help='Path of the dataset file (*.fasta).')

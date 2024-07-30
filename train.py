@@ -12,6 +12,10 @@ def train(args):
         train_UniAMP(args)
     elif args.model == 'ATT':
         train_ATT(args)
+    elif args.model == 'MLP':
+        train_MLP(args)
+    # elif args.model == 'KAN':
+    #     train_KAN(args)
     else:
         raise ValueError('Model input error')
     pass
@@ -19,15 +23,15 @@ def train(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-model', type=str, default='LSTM',
+    parser.add_argument('-model', type=str, default='UniAMP',
                         help='The name of the model to be trained (LSTM/ATT/BERT/UniAMP).')
-    parser.add_argument('-feature', type=str, default='uni',
-                        help='Methods for extracting sequence features (sequence/pca/uni).')
+    parser.add_argument('-feature', type=str, default='unirep_protT5',
+                        help='Methods for extracting sequence features (sequence/pca/unrep_protT5).')
     parser.add_argument('-dataset_path', type=str, default=r'./data/aeruginosa/training_dataset.csv',
-                        help='Path of the dataset file (*.csv/*.npz).')
+                        help='Path of the dataset file (*.csv/*.npz/*.json).')
     parser.add_argument('-lr', type=float, default=0.0001,
                         help='Learning rate.')
-    parser.add_argument('-epochs', type=int, default=200,
+    parser.add_argument('-epochs', type=int, default=300,
                         help='Training epochs.')
     parser.add_argument('-patience', type=int, default=30,
                         help='Training patience.')

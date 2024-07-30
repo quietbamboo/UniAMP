@@ -1,10 +1,14 @@
 import argparse
 import os
+import json
+from transformers import T5Tokenizer, T5EncoderModel
 
 from utils.feature_extraction import *
 from utils.my_metric import *
 from utils.model import *
+from utils.my_function import *
 from utils.attention import Attention_layer
+from utils.cal_protT5 import *
 
 import torch
 import torch.nn.functional as F
@@ -14,6 +18,7 @@ from keras.models import load_model, Sequential
 from tqdm import tqdm
 import time
 import subprocess
+
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -80,6 +85,7 @@ def infer_BERT(args):
             y_pred_prob = F.softmax(output).cpu().numpy()[:, 1].tolist()
             Y_pred += y_pred_prob
 
+            
     return [(key, sequences_dict[key], Y_pred[ind]) for ind, key in enumerate(sequences_dict.keys())]
 
 
@@ -91,24 +97,51 @@ def infer_UniAMP(args):
                                        'get_F_score': get_F_score,
                                        'get_MCC': get_MCC})
     sequences_dict = read_fasta(args.dataset_path)
-    if args.feature == 'pca':
-        X_values = feature_encode(list(sequences_dict.values()))
-    elif args.feature == 'uni':
-        if not os.path.exists(r'./data/temp'):
-            os.makedirs(r'./data/temp')
-        current_time = time.time()
-        command = f"tape-embed unirep {args.dataset_path} ./data/temp/temp_input_{str(current_time)}.npz babbler-1900 --tokenizer unirep"
-        subprocess.run(command, check=True, shell=True)
-        data = np.load(rf'./data/temp/temp_input_{str(current_time)}.npz', allow_pickle=True)
-        X_values = np.array([data[key].flatten()[0]['avg'] for key in data.keys()])
-    else:
-        raise ValueError('Model input error')
+    # if args.feature == 'pca':
+    #     X_values = feature_encode(list(sequences_dict.values()))
+    # elif args.feature == 'unirep_protT5':
+    if not os.path.exists(r'./data/temp'):
+        os.makedirs(r'./data/temp')
+    current_time = time.time()
+    command = f"tape-embed unirep {args.dataset_path} ./data/temp/temp_input_{str(current_time)}.npz babbler-1900 --tokenizer unirep"
+    subprocess.run(command, check=True, shell=True)
+    data = np.load(rf'./data/temp/temp_input_{str(current_time)}.npz', allow_pickle=True)
+    df = calculate_protT5(args.dataset_path)
+    protT5_dict = {row['name'][1:]:row['protT5'] for _, row in df.iterrows()}
+    X_values = np.array([np.concatenate((data[key].flatten()[0]['avg'], np.array(protT5_dict[key]))) for key in data.keys()])
+    # else:
+    #     raise ValueError('Model input error')
 
     Y_pred = model.predict(X_values)
-    if args.feature == 'pca':
-        return [(key, sequences_dict[key], Y_pred[ind][0]) for ind, key in enumerate(sequences_dict.keys())]
-    else:
-        result_dict = {key: Y_pred[ind][0] for ind, key in enumerate(data.keys())}
-        return [(key, sequences_dict[key], result_dict[key]) for key in sequences_dict.keys()]
+    # if args.feature == 'pca':
+    #     return [(key, sequences_dict[key], Y_pred[ind][0]) for ind, key in enumerate(sequences_dict.keys())]
+    # else:
+    result_dict = {key: Y_pred[ind][0] for ind, key in enumerate(data.keys())}
+    # for key in sequences_dict:
+    #     print(key)
+    # for key in sequences_dict.keys():
+    #     print(key)
+    return [(key, sequences_dict[key], result_dict[key]) for key in sequences_dict.keys()]
 
 
+# def infer_LSTM_feature(args):
+#     model = load_model(args.model_path,
+#                     custom_objects={'get_precision': get_precision,
+#                                     'get_recall': get_recall,
+#                                     'get_F_score': get_F_score,
+#                                     'get_MCC': get_MCC})
+
+#     sequences_dict = read_fasta(args.dataset_path)
+
+
+#     X_values = encode_sequence_to_vector(list(sequences_dict.values()), 50)
+
+#     layer_name = 'lstm_1'  
+#     intermediate_layer_model = Model(inputs=model.input,
+#                                     outputs=model.get_layer(layer_name).output)
+
+#     Y_pred = intermediate_layer_model.predict(X_values)
+
+#     print("Shape of output from LSTM layer:", Y_pred.shape)
+#     print("Output values from LSTM layer:", Y_pred)
+#     pd.DataFrame(Y_pred).to_csv(r'benchmark_dataset_LSTM.csv', index=False)

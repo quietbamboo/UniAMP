@@ -16,6 +16,8 @@ pip install tensorflow-gpu==1.14.0
 pip install keras==2.2.4
 pip install scikit-learn==0.22.1
 pip install pandas tape_proteins pytorch_pretrained_bert
+pip install sentencepiece
+pip install transformers
 ~~~
 **You may need the following code when protobuf error occurs**
 ~~~
@@ -30,17 +32,22 @@ Ensure to adjust the version numbers and dependencies according to your specific
 
 ## Usage
 ### Feature extraction
-In this project, we leverage the power of [UniRep](https://github.com/churchlab/UniRep), a tool developed by the [Church Lab](https://churchlab.github.io/), for feature extraction. UniRep is a versatile toolkit for extracting fixed-size feature vectors from biological sequences, such as proteins or RNA.\
 **The UniRep repository**, available at [https://github.com/churchlab/UniRep](https://github.com/churchlab/UniRep), contains the source code, documentation, and examples for using UniRep in your projects.\
 Due to the installation of the `tape_proteins` toolkit, you can conveniently utilize UniRep as follows:
 ~~~
 tape-embed unirep input.fasta output.npz babbler-1900 --tokenizer unirep
 ~~~
+**The ESM-2 repository**, available at [https://github.com/facebookresearch/esm](https://github.com/facebookresearch/esm).
+When you need to use ESM-2 feature vectors, you can use the `utils/cal_esm2.py` program to convert the `.fasta` format file to the `.json` format, and then use the `utils/data.py/load_esm2` function to load it.
+**The ProtTrans repository**, available at [https://github.com/agemagician/ProtTrans](https://github.com/agemagician/ProtTrans).
+When you need to use ProtT5 feature vectors, you can use the `utils/cal_protT5.py` program to convert the `.fasta` format file to the `.json` format, and then use the `utils/data.py/load_protT5` function to load it.\
+Before using it, you must download all files from [https://huggingface.co/Rostlab/prot_t5_xl_uniref50/tree/main](https://huggingface.co/Rostlab/prot_t5_xl_uniref50/tree/main) and put them in the `utils/protT5` directory
+
 ### train
 ~~~
-python train.py -model UniAMP -dataset_path ./data/aeruginosa/training_dataset.npz
+python train.py -model UniAMP
 ~~~
-_If you need to train other models, your `dataset_path` should be `*.csv`, and `-feature pca` for feature PCA._
+_If you need to train other models, the `-dataset_path` should be `*.csv`, and `-feature pca` for feature PCA._
 - Use `-lr xxx` to set a specified learning rate.
   - Default Value: _1e-4_
 - Use `-epochs xxx` to set the number of training epochs.
@@ -58,12 +65,12 @@ _If you need to train other models, your `dataset_path` should be `*.csv`, and `
   - Default Value: _30_
 ### test
 ~~~
-python test.py -model UniAMP -model_path ./models/model_UniAMP_uni.h5 -dataset_path ./data_aeruginosa/benchmark_dataset.npz
+python test.py -model UniAMP -model_path ./models/model_aeruginosa_UniAMP_uni_protT5.h5
 ~~~
-_If you need to test other models, your `dataset_path` should be `*.csv`._
+_If you need to test other models, the `-dataset_path` should be `*.csv`._
 ### infer
 ~~~
-python infer.py -model UniAMP -model_path ./models/model_UniAMP_uni.h5 -dataset_path ./data_aeruginosa/benchmark_dataset.fasta
+python infer.py -model UniAMP -model_path ./models/model_aeruginosa_UniAMP_uni_protT5.h5 -dataset_path ./data_aeruginosa/benchmark_dataset.fasta
 ~~~
 - Use `-save_path` to specify the path where the inference results will be saved.
   - Default Value: _./data/results/results.csv_
@@ -71,4 +78,4 @@ python infer.py -model UniAMP -model_path ./models/model_UniAMP_uni.h5 -dataset_
 - When inferring, there are no special requirements for the `.fasta` format.
 - When training and test:
   - A DataFrame is recorded in `.csv` format, which is required to contain `sequence` and `class` columns. Where `sequence` should be composed of 20 standard amino acids, and `class` is the label of the sequence.
-  - When using UniRep to convert `.fasta` to `.npz` format, please ensure that the last character of your `sequence_name` is the label of the sequence. The program will read this character for evaluation.
+  - When using UniRep, ESM-2 and protT5 to convert `.fasta` to `.npz/.json` format, please ensure that the last character of your `sequence_name` is the label of the sequence. The program will read this character for evaluation.

@@ -4,6 +4,8 @@ import os
 from utils.feature_extraction import *
 from utils.my_metric import *
 from utils.model import *
+from utils.data import *
+from utils.my_function import *
 from utils.attention import Attention_layer
 
 import torch
@@ -11,8 +13,7 @@ import torch.nn.functional as F
 import pandas as pd
 from keras.models import load_model
 from tqdm import tqdm
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, average_precision_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
@@ -33,6 +34,8 @@ def test_LSTM(args):
 
     fpr, tpr, thresholds = roc_curve(Y_values, Y_pred)
     roc_auc = auc(fpr, tpr)
+    ap = average_precision_score(Y_values, Y_pred)
+    print('AP', ap)
     print('AUC:', roc_auc)
 
     Y_pred = np.round(Y_pred)
@@ -65,6 +68,8 @@ def test_ATT(args):
 
     fpr, tpr, thresholds = roc_curve(Y_values, Y_pred)
     roc_auc = auc(fpr, tpr)
+    ap = average_precision_score(Y_values, Y_pred)
+    print('AP', ap)
     print('AUC:', roc_auc)
 
     Y_pred = np.round(Y_pred)
@@ -123,6 +128,8 @@ def test_BERT(args):
 
     fpr, tpr, thresholds = roc_curve(Y_values, Y_pred)
     roc_auc = auc(fpr, tpr)
+    ap = average_precision_score(Y_values, Y_pred)
+    print('AP', ap)
     print('AUC:', roc_auc)
 
     return TP, FP, TN, FN
@@ -139,9 +146,18 @@ def test_UniAMP(args):
         df = pd.read_csv(args.dataset_path)
         X_values = feature_encode(list(df['sequence']))
         Y_values = np.array(list(df['class']), dtype=np.float)
-    elif args.feature == 'uni':
-        data = np.load(args.dataset_path, allow_pickle=True)
-        X_values = np.array([data[key].flatten()[0]['avg'] for key in data.keys()])
+    elif args.feature == 'comparison':
+        temp_dict = {'pseaac': 24, 'ct': 343, 'ac': 35, 'ad1': 35, 'ad2': 35, 'ad3': 35}
+        features = args.comparison.split('_')
+        input_dim = sum([temp_dict[feature] for feature in features])
+        df = pd.read_csv(args.dataset_path)
+        X_values = feature_encode_comparison(list(df['sequence']), features)
+        Y_values = np.array(list(df['class']), dtype=np.float)
+    elif args.feature == 'unirep_protT5':
+        # esm2_dict = load_esm2(args.dataset_path.replace('.csv', '_esm2.json'))
+        protT5_dict = load_protT5(args.dataset_path.replace('.csv', '_protT5.json'))
+        data = np.load(args.dataset_path.replace('.csv', '.npz'), allow_pickle=True)
+        X_values = np.array([np.concatenate((data[key].flatten()[0]['avg'], np.array(protT5_dict[key]))) for key in data.keys()])
         Y_values = np.array([float(key[-1]) for key in data.keys()])
     else:
         raise ValueError('Feature input error')
@@ -150,6 +166,8 @@ def test_UniAMP(args):
 
     fpr, tpr, thresholds = roc_curve(Y_values, Y_pred)
     roc_auc = auc(fpr, tpr)
+    ap = average_precision_score(Y_values, Y_pred)
+    print('AP', ap)
     print('AUC:', roc_auc)
 
     Y_pred = np.round(Y_pred)
@@ -230,4 +248,40 @@ def test_sequences(args):
                 FP += 1
             else:
                 TN += 1
+    return TP, FP, TN, FN
+
+
+def test_MLP(args):
+    # esm2_dict = load_esm2(args.dataset_path.replace('.csv', '_esm2.json'))
+    protT5_dict = load_protT5(args.dataset_path.replace('.csv', '_protT5.json'))
+    data = np.load(args.dataset_path.replace('.csv', '.npz'), allow_pickle=True)
+    X_test = np.array([np.concatenate((data[key].flatten()[0]['avg'], np.array(protT5_dict[key]))) for key in data.keys()])
+    Y_test = np.array([float(key[-1]) for key in data.keys()])
+
+    test_dataset = MLPDataset(X_test, Y_test)
+    test_dl = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+
+
+    # model = torch.load(args.model_path)
+    model = MLP_test(input_size = 2924, hidden_sizes = [512, 256], output_size = 2)
+    model.load_state_dict(torch.load(args.model_path))
+    model.to(device)
+
+    model.eval()
+    TP = FP = TN = FN = 0
+    Y_pred = []
+    batch_iter = tqdm(test_dl, desc="Testing", leave=True)
+    with torch.no_grad():
+        for eval_steps, (x_test, y_test) in enumerate(batch_iter):
+            output = model(x_test.to(device))
+            y_pred_prob = F.softmax(output).cpu().numpy()[:, 1].tolist()
+            Y_pred += y_pred_prob
+            _, y_pred = torch.max(output, 1)
+            y_test = y_test.to(device)
+            TP += torch.sum((y_pred > 0.5) & (y_test > 0.5))
+            FP += torch.sum((y_pred > 0.5) & (y_test <= 0.5))
+            TN += torch.sum((y_pred <= 0.5) & (y_test <= 0.5))
+            FN += torch.sum((y_pred <=0.5) & (y_test > 0.5))
+    fpr, tpr, thresholds = roc_curve(Y_test, Y_pred)
+    roc_auc = auc(fpr, tpr)
     return TP, FP, TN, FN

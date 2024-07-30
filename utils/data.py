@@ -1,7 +1,21 @@
+import json
+import pandas as pd
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 
+class MLPDataset(Dataset):
+    def __init__(self, X, Y):
+        self.X = torch.tensor(X, dtype=torch.float32)
+        self.Y = torch.tensor(Y, dtype=torch.float32)
+
+    def __len__(self):
+        return len(self.Y)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.Y[idx]
+
+        
 class TextFeatures:
     """
     A single set of input features for the Bert model.
@@ -168,3 +182,18 @@ class TextFeaturesDataset(Dataset):
 
     def __len__(self):
         return self.len
+
+def load_esm2(data_path: str):
+    with open(data_path, 'r') as f:
+        data = json.load(f)
+    df = pd.DataFrame(data)
+    esm2_dict = {row['name'][1:]:row['ESM2'] for _, row in df.iterrows()}
+    return esm2_dict
+
+
+def load_protT5(data_path: str):
+    with open(data_path, 'r') as f:
+        data = json.load(f)
+    df = pd.DataFrame(data)
+    protT5_dict = {row['name'][1:]:row['protT5'] for _, row in df.iterrows()}
+    return protT5_dict
