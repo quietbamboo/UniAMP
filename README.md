@@ -37,9 +37,9 @@ Due to the installation of the `tape_proteins` toolkit, you can conveniently uti
 ~~~
 tape-embed unirep input.fasta output.npz babbler-1900 --tokenizer unirep
 ~~~
-**The ESM-2 repository**, available at [https://github.com/facebookresearch/esm](https://github.com/facebookresearch/esm).
-When you need to use ESM-2 feature vectors, you can use the `utils/cal_esm2.py` program to convert the `.fasta` format file to the `.json` format, and then use the `utils/data.py/load_esm2` function to load it.
-**The ProtTrans repository**, available at [https://github.com/agemagician/ProtTrans](https://github.com/agemagician/ProtTrans).
+**The ESM-2 repository**, available at [https://github.com/facebookresearch/esm](https://github.com/facebookresearch/esm).\
+When you need to use ESM-2 feature vectors, you can use the `utils/cal_esm2.py` program to convert the `.fasta` format file to the `.json` format, and then use the `utils/data.py/load_esm2` function to load it.\
+**The ProtTrans repository**, available at [https://github.com/agemagician/ProtTrans](https://github.com/agemagician/ProtTrans).\
 When you need to use ProtT5 feature vectors, you can use the `utils/cal_protT5.py` program to convert the `.fasta` format file to the `.json` format, and then use the `utils/data.py/load_protT5` function to load it.\
 Before using it, you must download all files from [https://huggingface.co/Rostlab/prot_t5_xl_uniref50/tree/main](https://huggingface.co/Rostlab/prot_t5_xl_uniref50/tree/main) and put them in the `utils/protT5` directory
 
