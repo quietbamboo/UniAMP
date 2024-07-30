@@ -6,7 +6,6 @@ from transformers import T5Tokenizer, T5EncoderModel
 from utils.feature_extraction import *
 from utils.my_metric import *
 from utils.model import *
-from utils.my_function import *
 from utils.attention import Attention_layer
 from utils.cal_protT5 import *
 

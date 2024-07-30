@@ -5,7 +5,6 @@ from utils.feature_extraction import *
 from utils.my_metric import *
 from utils.model import *
 from utils.data import *
-from utils.my_function import *
 from utils.attention import Attention_layer
 
 import torch
